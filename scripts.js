@@ -1,5 +1,5 @@
 // Configuración de la API
-const API_URL = 'http://localhost:5000/api';  // Cambiar en producción
+const API_URL = 'https://web-production-8abc3.up.railway.app/api';  // Cambiar en producción
 const REFRESH_INTERVAL = 10000; // Actualizar cada 10 segundos
 
 // Modo actual seleccionado
