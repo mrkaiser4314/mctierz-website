@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCTierz - Rankings</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">MCTIERZ</div>
+            <ul class="nav-menu">
+                <li><a href="#" class="nav-link">🏆 Rankings</a></li>
+                <li><a href="#" class="nav-link">💬 Discords ▼</a></li>
+                <li><a href="#" class="nav-link">📋 API Docs</a></li>
+            </ul>
+            <div class="search-bar">
+                <input type="text" placeholder="Search player..." id="searchInput">
+            </div>
+        </div>
+    </nav>
+
+    <div class="tabs-container">
+        <div class="tabs">
+            <button class="tab-btn active" data-mode="overall">
+                <span class="tab-icon">🏆</span>
+                <span>Overall</span>
+            </button>
+            <button class="tab-btn" data-mode="UHC">
+                <span class="tab-icon">❤️</span>
+                <span>UHC</span>
+            </button>
+            <button class="tab-btn" data-mode="Sword">
+                <span class="tab-icon">🗡️</span>
+                <span>Sword</span>
+            </button>
+            <button class="tab-btn" data-mode="Mazo">
+                <span class="tab-icon">🔨</span>
+                <span>Mazo</span>
+            </button>
+            <button class="tab-btn" data-mode="NethOP">
+                <span class="tab-icon">🧪</span>
+                <span>NethOP</span>
+            </button>
+            <button class="tab-btn" data-mode="Crystal">
+                <span class="tab-icon">💎</span>
+                <span>Crystal</span>
+            </button>
+        </div>
+
+        <div class="server-info">
+            <div class="info-badge">
+                <span>ℹ️ Information</span>
+            </div>
+            <div class="server-badge">
+                <div class="server-icon">🎮</div>
+                <div class="server-details">
+                    <span class="server-label">SERVER IP</span>
+                    <span class="server-ip">mcpvp.club</span>
+                </div>
+                <button class="copy-btn">📋</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="content">
+        <div id="loadingMessage" class="loading-state">
+            <div class="spinner"></div>
+            <p>Cargando rankings...</p>
+        </div>
+
+        <div id="emptyMessage" class="empty-state" style="display: none;">
+            <div class="empty-icon">📊</div>
+            <h2>No hay jugadores testeados aún</h2>
+            <p>Los rankings aparecerán cuando se publiquen resultados en Discord</p>
+        </div>
+
+        <div class="rankings-grid" id="rankingsGrid" style="display: none;">
+            <!-- Tier 1 -->
+            <div class="tier-column tier-1">
+                <div class="tier-header">
+                    <span class="tier-icon">👑</span>
+                    <span class="tier-title">Tier 1</span>
+                </div>
+                <div class="players-list" id="tier1Players"></div>
+            </div>
+
+            <!-- Tier 2 -->
+            <div class="tier-column tier-2">
+                <div class="tier-header">
+                    <span class="tier-icon">🥈</span>
+                    <span class="tier-title">Tier 2</span>
+                </div>
+                <div class="players-list" id="tier2Players"></div>
+            </div>
+
+            <!-- Tier 3 -->
+            <div class="tier-column tier-3">
+                <div class="tier-header">
+                    <span class="tier-icon">🥉</span>
+                    <span class="tier-title">Tier 3</span>
+                </div>
+                <div class="players-list" id="tier3Players"></div>
+            </div>
+
+            <!-- Tier 4 -->
+            <div class="tier-column tier-4">
+                <div class="tier-header">
+                    <span class="tier-icon">📊</span>
+                    <span class="tier-title">Tier 4</span>
+                </div>
+                <div class="players-list" id="tier4Players"></div>
+            </div>
+
+            <!-- Tier 5 -->
+            <div class="tier-column tier-5">
+                <div class="tier-header">
+                    <span class="tier-icon">🌱</span>
+                    <span class="tier-title">Tier 5</span>
+                </div>
+                <div class="players-list" id="tier5Players"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Perfil del Jugador -->
+    <div id="playerModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div class="modal-body">
+                <div class="modal-header">
+                    <img id="modalAvatar" class="modal-avatar" src="" alt="">
+                    <h2 id="modalName">Player Name</h2>
+                    <div id="modalBadge" class="modal-badge">Combat Grandmaster</div>
+                    <div id="modalRegion" class="modal-region">North America</div>
+                    <div class="modal-namemc">
+                        <span>📋</span>
+                        <span id="modalNameMC">NameMC</span>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <h3>POSITION</h3>
+                    <div class="modal-position">
+                        <div class="position-number">#<span id="modalPosition">1</span></div>
+                        <div class="position-info">
+                            <span class="position-icon">🏆</span>
+                            <span class="position-label">OVERALL</span>
+                            <span class="position-points">(<span id="modalTotalPoints">0</span> points)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <h3>TIERS</h3>
+                    <div class="modal-tiers" id="modalTiers">
+                        <!-- Tiers dinámicos -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
