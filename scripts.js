@@ -6,7 +6,7 @@ let allPlayers = {};
 
 // Cargar rankings al iniciar
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Iniciando MCTiers Rankings');
+    console.log('🚀 Iniciando Papayas tierlist Rankings');
     console.log('📡 API URL:', API_URL);
     loadRankings('overall');
     setupModeButtons();
