@@ -1,18 +1,36 @@
-// Configuración de la API
+// Configuración de la API - IMPORTANTE: URL de Railway
 const API_URL = 'https://web-production-8abc3.up.railway.app/api';
+
+// NOTA: El dominio de Vercel cambió pero la API sigue en Railway
+// Web: https://mctierz-website-j5ua-3hs63ky54-magisk-mrkaisers-projects.vercel.app/
+// API: https://web-production-8abc3.up.railway.app/api
 
 let currentMode = 'overall';
 let allPlayers = {};
 
-// Cargar rankings al iniciar
-document.addEventListener('DOMContentLoaded', () => {
+console.log('📜 scripts.js cargado');
+console.log('📡 API configurada:', API_URL);
+
+// Función de inicialización
+function init() {
     console.log('🚀 Iniciando Papayas tierlist Rankings');
     console.log('📡 API URL:', API_URL);
+    console.log('🔍 Estado del DOM:', document.readyState);
     loadRankings('overall');
     setupModeButtons();
     // Auto-refresh cada 10 segundos
     setInterval(() => loadRankings(currentMode), 10000);
-});
+}
+
+// Cargar rankings al iniciar - compatible con carga tardía
+if (document.readyState === 'loading') {
+    console.log('⏳ DOM aún cargando, esperando...');
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    // DOM ya está listo
+    console.log('✅ DOM ya listo, ejecutando init()');
+    init();
+}
 
 // Configurar botones de modalidad
 function setupModeButtons() {
@@ -128,7 +146,7 @@ function getTiersHTML(modalidades) {
     if (!modalidades) return '';
     
     let html = '';
-    const modes = ['Mace', 'Sword', 'UHC', 'Crystal', 'NethOP'];
+    const modes = ['Mace', 'Sword', 'UHC', 'Crystal', 'NethOP', 'SMP', 'Axe', 'Dpot'];
     
     modes.forEach(mode => {
         if (modalidades[mode]) {
@@ -167,7 +185,10 @@ function getModeEmoji(mode) {
         'Sword': '⚔️',
         'UHC': '❤️',
         'Crystal': '💎',
-        'NethOP': '🧪'
+        'NethOP': '🧪',
+        'SMP': '🪓',
+        'Axe': '🪓',
+        'Dpot': '🧪'
     };
     return emojis[mode] || '🎮';
 }
