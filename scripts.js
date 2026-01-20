@@ -1,5 +1,5 @@
 // Configuración de la API
-const API_URL = 'bot-waitlist-nethpot-production.up.railway.app/api';
+const API_URL = 'https://bot-waitlist-nethpot-production.up.railway.app//api';
 
 let currentMode = 'overall';
 let allPlayers = {};
