@@ -1,39 +1,25 @@
-// Configuración de la API
-const API_URL = 'https://web-production-8abc3.up.railway.app/api';  // Cambiar en producción
-const REFRESH_INTERVAL = 10000; // Actualizar cada 10 segundos
+// ConfiguraciÃ³n de la API - IMPORTANTE: URL de Railway
+const API_URL = 'https://web-production-8abc3.up.railway.app/api';
 
-// Modo actual seleccionado
 let currentMode = 'overall';
-let refreshTimer = null;
 
-// Iconos de modalidades
-const MODE_ICONS = {
-    'Overall': '🏆',
-    'UHC': '❤️',
-    'Sword': '🗡️',
-    'Mazo': '🔨',
-    'NethOP': '🧪',
-    'Crystal': '💎'
-};
-
-// Inicializar
+// Cargar rankings al iniciar
 document.addEventListener('DOMContentLoaded', () => {
-    setupTabs();
-    setupCopyButton();
-    setupSearch();
-    setupModal();
-    loadRankings(currentMode);
-    startAutoRefresh();
+    console.log('ðŸš€ Iniciando MCTierz Rankings');
+    console.log('ðŸ“¡ API URL:', API_URL);
+    loadRankings('overall');
+    setupModeButtons();
+    // Auto-refresh cada 10 segundos
+    setInterval(() => loadRankings(currentMode), 10000);
 });
 
-// Configurar pestañas
-function setupTabs() {
-    const tabs = document.querySelectorAll('.tab-btn');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            currentMode = tab.dataset.mode;
+// Configurar botones de modalidad
+function setupModeButtons() {
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentMode = btn.dataset.mode;
             loadRankings(currentMode);
         });
     });
@@ -42,202 +28,194 @@ function setupTabs() {
 // Cargar rankings desde la API
 async function loadRankings(mode) {
     try {
-        showLoading();
+        console.log(`ðŸ“¥ Cargando rankings para: ${mode}`);
+        console.log(`ðŸ”— URL completa: ${API_URL}/rankings/${mode}`);
         
         const response = await fetch(`${API_URL}/rankings/${mode}`);
         
+        console.log('ðŸ“¡ Respuesta recibida:', response.status, response.statusText);
+        
         if (!response.ok) {
-            throw new Error('Error al cargar rankings');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
+        console.log('âœ… Datos recibidos:', data);
+        console.log('ðŸ‘¥ Total jugadores:', data.total_players);
         
-        // Si no hay jugadores, mostrar mensaje vacío
-        if (data.total_players === 0) {
-            showEmpty();
-            return;
-        }
-        
-        // Mostrar rankings
-        showRankings();
-        
-        // Cargar cada tier
-        loadTier(1, data.tier1 || []);
-        loadTier(2, data.tier2 || []);
-        loadTier(3, data.tier3 || []);
-        loadTier(4, data.tier4 || []);
-        loadTier(5, data.tier5 || []);
+        displayRankings(data);
         
     } catch (error) {
-        console.error('Error loading rankings:', error);
-        showError();
+        console.error('âŒ Error cargando rankings:', error);
+        showError(error.message);
     }
 }
 
-// Cargar jugadores en un tier
-function loadTier(tierNumber, players) {
-    const container = document.getElementById(`tier${tierNumber}Players`);
+// Mostrar rankings en la pÃ¡gina
+function displayRankings(data) {
+    const container = document.getElementById('rankings-container');
     
-    if (players.length === 0) {
-        container.innerHTML = '<div class="empty-tier">No players</div>';
+    if (!data || data.total_players === 0) {
+        container.innerHTML = `
+            <div class="no-data">
+                <h2>ðŸ“Š No hay jugadores testeados aÃºn</h2>
+                <p>Los rankings aparecerÃ¡n cuando se publiquen los primeros resultados</p>
+                <p style="margin-top: 20px; font-size: 14px; opacity: 0.7;">
+                    Conectado a: ${API_URL}
+                </p>
+            </div>
+        `;
         return;
     }
-
-    container.innerHTML = players.map(player => `
-        <div class="player-card" data-player-id="${player.id}" onclick="openPlayerModal('${player.id}')">
-            <img src="https://mc-heads.net/avatar/${player.name}/32" 
-                 alt="${player.name}" 
-                 class="player-avatar"
-                 onerror="this.src='https://via.placeholder.com/32/444/fff?text=${player.name.charAt(0)}'">
-            <div class="player-info">
-                <span class="player-name">${player.name}</span>
-                <span class="player-points">${player.points} pts</span>
-            </div>
-            <span class="player-rank">↗</span>
-        </div>
-    `).join('');
-}
-
-// Estados de visualización
-function showLoading() {
-    document.getElementById('loadingMessage').style.display = 'block';
-    document.getElementById('emptyMessage').style.display = 'none';
-    document.getElementById('rankingsGrid').style.display = 'none';
-}
-
-function showEmpty() {
-    document.getElementById('loadingMessage').style.display = 'none';
-    document.getElementById('emptyMessage').style.display = 'block';
-    document.getElementById('rankingsGrid').style.display = 'none';
-}
-
-function showRankings() {
-    document.getElementById('loadingMessage').style.display = 'none';
-    document.getElementById('emptyMessage').style.display = 'none';
-    document.getElementById('rankingsGrid').style.display = 'grid';
-}
-
-function showError() {
-    document.getElementById('loadingMessage').innerHTML = `
-        <div class="empty-icon">⚠️</div>
-        <h2>Error al cargar rankings</h2>
-        <p>Verifica que la API esté corriendo</p>
-        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--accent); border: none; color: white; border-radius: 6px; cursor: pointer;">Reintentar</button>
-    `;
-    document.getElementById('loadingMessage').style.display = 'block';
-    document.getElementById('emptyMessage').style.display = 'none';
-    document.getElementById('rankingsGrid').style.display = 'none';
-}
-
-// Auto-refresh
-function startAutoRefresh() {
-    refreshTimer = setInterval(() => {
-        loadRankings(currentMode);
-    }, REFRESH_INTERVAL);
-}
-
-function stopAutoRefresh() {
-    if (refreshTimer) {
-        clearInterval(refreshTimer);
-        refreshTimer = null;
+    
+    container.innerHTML = '';
+    
+    // Mostrar cada tier
+    for (let tier = 1; tier <= 5; tier++) {
+        const tierData = data[`tier${tier}`];
+        
+        if (tierData && tierData.length > 0) {
+            const tierSection = createTierSection(tier, tierData);
+            container.appendChild(tierSection);
+        }
     }
 }
 
-// Modal del jugador
-function setupModal() {
-    const modal = document.getElementById('playerModal');
-    const closeBtn = document.querySelector('.modal-close');
+// Crear secciÃ³n de tier
+function createTierSection(tierNum, players) {
+    const section = document.createElement('div');
+    section.className = 'tier-section';
     
-    closeBtn.onclick = () => {
-        modal.style.display = 'none';
+    const tierColors = {
+        1: '#ff4444',
+        2: '#ffaa00',
+        3: '#44ff44',
+        4: '#4444ff',
+        5: '#aa44ff'
     };
     
-    window.onclick = (event) => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    };
+    section.innerHTML = `
+        <div class="tier-header" style="background: ${tierColors[tierNum]};">
+            <h2>ðŸ† Tier ${tierNum}</h2>
+            <span class="player-count">${players.length} jugadores</span>
+        </div>
+        <div class="tier-players">
+            ${players.map((player, index) => createPlayerCard(player, index + 1)).join('')}
+        </div>
+    `;
+    
+    return section;
 }
 
-async function openPlayerModal(playerId) {
-    const modal = document.getElementById('playerModal');
-    
+// Crear tarjeta de jugador
+function createPlayerCard(player, position) {
+    return `
+        <div class="player-card" onclick="showPlayerModal('${player.id}')">
+            <div class="player-position">#${position}</div>
+            <div class="player-info">
+                <h3>${player.name}</h3>
+                <p class="player-points">â­ ${player.points} puntos</p>
+            </div>
+            <div class="player-tier">
+                Tier ${player.tier}
+            </div>
+        </div>
+    `;
+}
+
+// Mostrar modal de jugador
+async function showPlayerModal(playerId) {
     try {
+        console.log(`ðŸ“¥ Cargando datos del jugador: ${playerId}`);
         const response = await fetch(`${API_URL}/player/${playerId}`);
         
         if (!response.ok) {
-            throw new Error('Player not found');
+            throw new Error(`Error cargando jugador: ${response.status}`);
         }
         
-        const player = await response.json();
+        const data = await response.json();
+        console.log('âœ… Datos del jugador:', data);
         
-        // Actualizar contenido del modal
-        document.getElementById('modalAvatar').src = `https://mc-heads.net/avatar/${player.name}/100`;
-        document.getElementById('modalName').textContent = player.name;
-        document.getElementById('modalNameMC').textContent = `NameMC ${player.name}`;
-        document.getElementById('modalPosition').textContent = player.position || '?';
-        document.getElementById('modalTotalPoints').textContent = player.puntos_totales || 0;
+        const modal = document.getElementById('player-modal');
+        const content = document.getElementById('modal-content');
         
-        // Actualizar tiers
-        const tiersContainer = document.getElementById('modalTiers');
-        tiersContainer.innerHTML = '';
+        content.innerHTML = `
+            <div class="modal-header">
+                <h2>ðŸ‘¤ ${data.name}</h2>
+                <button class="close-btn" onclick="closeModal()">âœ•</button>
+            </div>
+            <div class="modal-body">
+                <div class="stat-row">
+                    <span class="stat-label">Discord:</span>
+                    <span class="stat-value">${data.discord_name}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Puntos Totales:</span>
+                    <span class="stat-value">â­ ${data.puntos_totales}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">PosiciÃ³n:</span>
+                    <span class="stat-value">#${data.position} de ${data.total_players}</span>
+                </div>
+                <h3>ðŸ“Š Tiers por Modalidad</h3>
+                <div class="modes-grid">
+                    ${Object.entries(data.tiers).map(([mode, info]) => `
+                        <div class="mode-stat">
+                            <strong>${getModeEmoji(mode)} ${mode}</strong>
+                            <span>${info.tier} (${info.puntos} pts)</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
         
-        for (const [mode, tierInfo] of Object.entries(player.tiers || {})) {
-            const badge = document.createElement('div');
-            badge.className = 'tier-badge';
-            badge.innerHTML = `
-                <div class="tier-badge-icon">${MODE_ICONS[mode] || '🎮'}</div>
-                <div class="tier-badge-label">${tierInfo.tier || 'N/A'}</div>
-            `;
-            tiersContainer.appendChild(badge);
-        }
-        
-        modal.style.display = 'block';
+        modal.style.display = 'flex';
         
     } catch (error) {
-        console.error('Error loading player:', error);
-        alert('Error al cargar información del jugador');
+        console.error('âŒ Error cargando jugador:', error);
+        alert('Error al cargar informaciÃ³n del jugador');
     }
 }
 
-// Botón copiar IP
-function setupCopyButton() {
-    const copyBtn = document.querySelector('.copy-btn');
-    const serverIp = document.querySelector('.server-ip').textContent;
-    
-    copyBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(serverIp).then(() => {
-            copyBtn.textContent = '✓';
-            setTimeout(() => {
-                copyBtn.textContent = '📋';
-            }, 2000);
-        });
-    });
+// Cerrar modal
+function closeModal() {
+    document.getElementById('player-modal').style.display = 'none';
 }
 
-// Búsqueda de jugadores
-function setupSearch() {
-    const searchInput = document.getElementById('searchInput');
-    
-    searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const playerCards = document.querySelectorAll('.player-card');
-        
-        playerCards.forEach(card => {
-            const playerName = card.querySelector('.player-name').textContent.toLowerCase();
-            if (playerName.includes(searchTerm)) {
-                card.style.display = 'flex';
-            } else {
-                card.style.display = 'none';
-            }
-        });
-    });
+// Obtener emoji de modalidad
+function getModeEmoji(mode) {
+    const emojis = {
+        'Mace': 'ðŸ”¨',
+        'Sword': 'âš”ï¸',
+        'UHC': 'â¤ï¸',
+        'Crystal': 'ðŸ’Ž',
+        'NethOP': 'ðŸ§ª'
+    };
+    return emojis[mode] || 'ðŸŽ®';
 }
 
-// Log
-console.log('%cMCTierz', 'font-size: 2rem; font-weight: bold; background: linear-gradient(135deg, #ff6b00, #ffd700); -webkit-background-clip: text; -webkit-text-fill-color: transparent;');
-console.log('%c🏆 Rankings en Tiempo Real', 'font-size: 1.2rem; color: #ffd700;');
-console.log('\n📡 Conectado a API:', API_URL);
-console.log('🔄 Auto-refresh cada', REFRESH_INTERVAL / 1000, 'segundos');
-console.log('\n💡 Los datos vienen directamente del bot de Discord');
-console.log('💡 La página se actualiza automáticamente');
+// Mostrar error
+function showError(errorMsg) {
+    const container = document.getElementById('rankings-container');
+    container.innerHTML = `
+        <div class="error-message">
+            <h2>âš ï¸ Error al cargar rankings</h2>
+            <p>No se pudo conectar con la API</p>
+            <div style="background: #f44; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                <strong>Error:</strong> ${errorMsg}
+            </div>
+            <p style="font-size: 14px; opacity: 0.7;">URL de API: ${API_URL}</p>
+            <button onclick="loadRankings(currentMode)" class="retry-btn" style="margin-top: 15px; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                ðŸ”„ Reintentar
+            </button>
+        </div>
+    `;
+}
+
+// Cerrar modal al hacer click fuera
+window.onclick = function(event) {
+    const modal = document.getElementById('player-modal');
+    if (event.target === modal) {
+        closeModal();
+    }
+}
