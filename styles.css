@@ -248,11 +248,12 @@ nav {
     font-size: 16px;
 }
 
-.tier-HT1, .tier-LT1 { background: #ff4444; }
-.tier-HT2, .tier-LT2 { background: #ffaa00; }
-.tier-HT3, .tier-LT3 { background: #44ff44; }
-.tier-HT4, .tier-LT4 { background: #4444ff; }
-.tier-HT5, .tier-LT5 { background: #aa44ff; }
+/* Tier colors - Updated to match tier names */
+.tier-T1, .tier-HT1, .tier-LT1 { background: #ff4444; }
+.tier-T2, .tier-HT2, .tier-LT2 { background: #ffaa00; }
+.tier-T3, .tier-HT3, .tier-LT3 { background: #44ff44; }
+.tier-T4, .tier-HT4, .tier-LT4 { background: #4444ff; }
+.tier-T5, .tier-HT5, .tier-LT5 { background: #aa44ff; }
 
 /* Modal */
 .modal {
