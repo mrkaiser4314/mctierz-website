@@ -41,13 +41,10 @@ async function loadRankings(mode) {
         
         // Guardar todos los jugadores para el modal
         allPlayers = {};
-        for (let tier = 1; tier <= 5; tier++) {
-            const tierData = data[`tier${tier}`];
-            if (tierData) {
-                tierData.forEach(player => {
-                    allPlayers[player.id] = player;
-                });
-            }
+        if (data.players) {
+            data.players.forEach(player => {
+                allPlayers[player.id] = player;
+            });
         }
         
         displayRankings(data, mode);
@@ -72,24 +69,15 @@ function displayRankings(data, mode) {
         return;
     }
     
-    // Combinar todos los jugadores y ordenar por puntos
-    let allPlayersList = [];
-    for (let tier = 1; tier <= 5; tier++) {
-        const tierData = data[`tier${tier}`];
-        if (tierData) {
-            allPlayersList = allPlayersList.concat(tierData);
-        }
-    }
-    
-    // Ordenar por puntos (mayor a menor)
-    allPlayersList.sort((a, b) => b.points - a.points);
+    // Usar la lista de jugadores directamente
+    const allPlayersList = data.players || [];
     
     // Crear lista de jugadores
     let html = '<div class="player-list">';
     
     allPlayersList.forEach((player, index) => {
         const rank = index + 1;
-        const skinUrl = getSkinUrl(player.name);
+        const skinUrl = getSkinUrl(player.name, player.es_premium);
         const tiersList = getTiersHTML(player.modalidades);
         
         // Determinar título basado en puntos
@@ -117,10 +105,12 @@ function displayRankings(data, mode) {
 }
 
 // Obtener URL de skin
-function getSkinUrl(playerName) {
-    // Por ahora usar mc-heads para todos
-    // El bot debe guardar si es premium o no
-    return `https://mc-heads.net/avatar/${playerName}/50`;
+function getSkinUrl(playerName, esPremium) {
+    if (esPremium === 'si') {
+        return `https://mc-heads.net/avatar/${playerName}/50`;
+    } else {
+        return `https://mc-heads.net/avatar/Steve/50`;
+    }
 }
 
 // Obtener título basado en puntos
@@ -133,7 +123,7 @@ function getTitleFromPoints(points) {
     return 'Rookie';
 }
 
-// Crear HTML de tiers
+// Crear HTML de tiers con tier exacto (LT3, HT4, etc.)
 function getTiersHTML(modalidades) {
     if (!modalidades) return '';
     
@@ -143,13 +133,14 @@ function getTiersHTML(modalidades) {
     modes.forEach(mode => {
         if (modalidades[mode]) {
             const modeData = modalidades[mode];
-            const tierClass = getTierClass(modeData.tier);
+            const tierExacto = modeData.tier_display || modeData.tier; // LT3, HT4, etc.
+            const tierClass = getTierClassFromName(tierExacto);
             const emoji = getModeEmoji(mode);
             
             html += `
                 <div class="tier-badge ${tierClass}">
                     <span class="tier-icon">${emoji}</span>
-                    <span>${getTierShortName(modeData.tier)}</span>
+                    <span>${tierExacto}</span>
                 </div>
             `;
         }
@@ -158,19 +149,15 @@ function getTiersHTML(modalidades) {
     return html;
 }
 
-// Obtener clase de tier
-function getTierClass(tier) {
-    if (tier === 1) return 'tier-HT1';
-    if (tier === 2) return 'tier-HT2';
-    if (tier === 3) return 'tier-HT3';
-    if (tier === 4) return 'tier-HT4';
-    if (tier === 5) return 'tier-HT5';
-    return 'tier-LT5';
-}
-
-// Obtener nombre corto del tier
-function getTierShortName(tier) {
-    return `T${tier}`;
+// Obtener clase de tier desde nombre exacto (LT3, HT4, etc.)
+function getTierClassFromName(tierName) {
+    // Convertir LT3, HT4, etc. a clase CSS
+    if (tierName.includes('1')) return 'tier-T1';
+    if (tierName.includes('2')) return 'tier-T2';
+    if (tierName.includes('3')) return 'tier-T3';
+    if (tierName.includes('4')) return 'tier-T4';
+    if (tierName.includes('5')) return 'tier-T5';
+    return 'tier-T5';
 }
 
 // Obtener emoji de modalidad
@@ -201,20 +188,24 @@ async function showPlayerModal(playerId) {
         const modal = document.getElementById('player-modal');
         const modalBody = document.getElementById('modal-body');
         
-        const skinUrl = `https://mc-heads.net/body/${data.name}`;
+        const skinUrl = data.es_premium === 'si' 
+            ? `https://mc-heads.net/body/${data.name}`
+            : `https://mc-heads.net/body/Steve`;
         const title = getTitleFromPoints(data.puntos_totales);
         
         let tiersHTML = '';
         if (data.tiers) {
-            tiersHTML = Object.entries(data.tiers).map(([mode, info]) => `
+            tiersHTML = Object.entries(data.tiers).map(([mode, info]) => {
+                const tierDisplay = info.tier_display || info.tier; // LT3, HT4, etc.
+                return `
                 <div class="modal-tier-item">
                     <span class="modal-tier-icon">${getModeEmoji(mode)}</span>
                     <div class="modal-tier-info">
                         <div class="modal-tier-mode">${mode}</div>
-                        <div class="modal-tier-value">${info.tier} (${info.puntos} pts)</div>
+                        <div class="modal-tier-value">${tierDisplay} (${info.puntos} pts)</div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
         
         modalBody.innerHTML = `
